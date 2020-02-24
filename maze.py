@@ -31,10 +31,13 @@ class QLearning:
         self.a = learning_rate
         self.g = discount_factor
 
+    # https://en.wikipedia.org/wiki/Q-learning
     def update(self, st, at, rt, st1):
         self.q[st, at] = (1 - self.a) * self.q[st, at] + self.a * (rt + self.g * np.max(self.q[st1]))
 
 
+WALL = -1
+GOAL = 1
 class Maze:
     def __init__(self, rows=4, cols=4):
         self.maze = np.zeros((rows, cols))
@@ -56,7 +59,7 @@ class Maze:
         return self.in_bounds(a.i, a.j)
 
     def agent_would_not_die(self, a):
-        return not self.maze[a.i, a.j] == -1
+        return not self.maze[a.i, a.j] == WALL
 
     def visualize(self):
         nr, nc = self.maze.shape
@@ -69,7 +72,7 @@ class Maze:
         plot_3d(*get_midpoint_for_loc(a.i, a.j), z, 'agent', color='blue', size=1)
         plot_3d(*get_midpoint_for_loc(nr-1, nc-1), z, 'goal', color='green', size=1)
 
-        x, y = np.where(self.maze == -1)
+        x, y = np.where(self.maze == WALL)
         plot_3d(x + 0.5, y + 0.5, [z]*len(x), 'wall', color='red', size=1)
 
     def is_valid_new_agent(self, a):
@@ -86,7 +89,6 @@ class Maze:
         ]
 
     def compute_possible_moves(self):
-        a = self.agent
         moves = self.all_actions
         return [(m, idx) for idx, m in enumerate(moves) if self.is_valid_new_agent(m)]
 
@@ -97,7 +99,7 @@ class Maze:
 
     def has_won(self):
         a = self.agent
-        return self.maze[a.i, a.j] == 1
+        return self.maze[a.i, a.j] == GOAL
 
 
 def get_midpoint_for_loc(i, j):
@@ -108,13 +110,13 @@ def make_test_maze(size=4):
     m = Maze(size, size)
     e = m.maze
     height, width = e.shape
-    e[-1, -1] = 1
+    e[-1, -1] = GOAL
     for i in range(len(e)):
         for j in range(len(e[i])):
             if i in [0, height-1] and j in [width-1, 0]:
                 continue
             if random.random() < 0.3:
-                e[i, j] = -1
+                e[i, j] = WALL
     return m
 
 
